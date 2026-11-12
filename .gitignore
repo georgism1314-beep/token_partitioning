@@ -1,0 +1,27 @@
+# Large data / caches (TB-scale)
+/acts/
+/attn_heads/
+/attn_topk/
+/ckpts/
+/ckpts_deep/
+/frozen_5e6/
+
+# Binary arrays and model weights
+*.npz
+*.npy
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# Logs
+/logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Run markers
+done
