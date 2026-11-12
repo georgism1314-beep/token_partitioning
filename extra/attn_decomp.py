@@ -19,7 +19,7 @@ token-id 统一用 tok 的高频词表：两折都出现过的最高频 n_groups
     Δ(tok | attnc) = η²(tokattn) − η²(attnc)（退回组混合了源 token，只是近似）
     attnc 先于 tok 被贪心选中的神经元比例 = mean(η²(attnc) > η²(tok))
 
-    python attn_decomp.py --names step10000 --layers 4 31
+    python extra/attn_decomp.py --names step10000 --layers 4 31
 """
 import argparse
 import time
@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--acts_root", default=str(root / "acts"))
 parser.add_argument("--attn_root", default=str(root / "attn_topk"))

@@ -8,7 +8,7 @@ ell=0 时只要 1.14 GiB，而整个 checkpoint 是 14.6 GB；镜像带宽只有
 安全性上只做了一件事：下来的张量必须和 safetensors 头里声明的 shape / dtype 完全对上，
 否则直接报错，免得把截断的权重当成"早期 checkpoint 的特征"去解释。
 
-    python fetch_ckpt.py --steps 1000 2000 --out_dir ckpts
+    python code/fetch_ckpt.py --steps 1000 2000 --out_dir ckpts
 """
 from __future__ import annotations
 
@@ -127,7 +127,7 @@ def main() -> int:
 
     out_dir = Path(args.out_dir)
     if not out_dir.is_absolute():
-        out_dir = Path(__file__).resolve().parent / out_dir
+        out_dir = Path(__file__).resolve().parents[1] / out_dir  # repo root
     base_model = Path(args.base_model)
 
     with cf.ThreadPoolExecutor(max_workers=args.jobs) as pool:

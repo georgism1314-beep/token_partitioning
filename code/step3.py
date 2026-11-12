@@ -10,8 +10,8 @@
 
 不含第 4 步的 Louvain 打分，所以这里报的 trace 份额只是"对角线解释比例"，不是 ΔQ(f)。
 
-    python step3.py runs_trial/Olmo-3-1025-7B/stats_code_L0.npz
-    python step3.py runs_trial/Olmo-3-1025-7B/stats_*_L0.npz --save_matrices
+    python code/step3.py runs_trial/Olmo-3-1025-7B/stats_code_L0.npz
+    python code/step3.py runs_trial/Olmo-3-1025-7B/stats_*_L0.npz --save_matrices
 """
 
 from __future__ import annotations

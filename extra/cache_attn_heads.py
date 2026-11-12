@@ -8,7 +8,7 @@
     done           全部写完才创建
 token-id 不单独存：pos 加上序列起点就能从 token_ids 取到。K=10、H=32、6 层时每 ckpt 约 15 GB。
 
-    python cache_attn_heads.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python extra/cache_attn_heads.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 import time
@@ -18,7 +18,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

@@ -13,7 +13,7 @@ K=50、T=2×10⁶、6 层时每 ckpt 约 2.4 GB（tok+pos）+ 1.2 GB（w）。
 权重定义：对该层所有 head 的 attention weights 取平均，再在 key 维上 top-k（含自己）。
 必须用 attn_implementation="eager"，否则 hook 拿不到权重矩阵。
 
-    python cache_attn_topk.py --steps 0 10000 --topk 50 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python extra/cache_attn_topk.py --steps 0 10000 --topk 50 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 import time
@@ -23,7 +23,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

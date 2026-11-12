@@ -11,7 +11,7 @@ Olmo-3 的 decoder layer 是后置归一化（attention / FFN 的输入都不做
     eta2  Σ_d Var(E[v_d | token]) / V       token-id 解释的方差占比（ε² 去偏，组 = 样本内最高频 n_groups 个 token + OTHER）
 以及每一层 attention 的 self / prev（放在自己、前一个 token 上的权重）和 ent（熵，nats），对 head 与位置 ≥1 平均。
 
-    python residual_share.py --steps 0 1000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python code/residual_share.py --steps 0 1000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 from pathlib import Path
@@ -20,7 +20,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

@@ -7,14 +7,14 @@
     4. 权重按名次单调不增、非负，且 Σ top-K 权重 <= 1（+容差）
 另外打印 Σ top-K 权重的均值（t >= K 的行），作为 top-K 截断程度的粗略参考。
 
-    python check_attn_cache.py
+    python extra/check_attn_cache.py
 """
 import argparse
 from pathlib import Path
 
 import numpy as np
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--attn_root", default=str(root / "attn_topk"))
 parser.add_argument("--chunk", type=int, default=250_000)

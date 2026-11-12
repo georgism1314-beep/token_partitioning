@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>因素分解进展 · tok / prev / trigram / POS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --fg: #1a1a1a;
+    --muted: #5c5c5c;
+    --subtle: #8a8a8a;
+    --card: #ffffff;
+    --stroke: #e5e5e2;
+    --accent: #2563eb;
+    --warn: #b45309;
+    --ok: #15803d;
+    --info-bg: #eff6ff;
+    --warn-bg: #fffbeb;
+    --neutral-bg: #f4f4f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px; }
+  h1 { font-size: 24px; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 18px; font-weight: 600; margin: 0 0 10px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--stroke); border-radius: 10px; padding: 14px 16px;
+  }
+  .stat .v { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat.info .v { color: var(--accent); }
+  .stat.warn .v { color: var(--warn); }
+  .stat.ok .v { color: var(--ok); }
+  .section { margin: 22px 0; }
+  .callout {
+    border: 1px solid var(--stroke); border-radius: 10px; padding: 12px 14px; margin: 10px 0;
+    background: var(--neutral-bg);
+  }
+  .callout.info { background: var(--info-bg); border-color: #bfdbfe; }
+  .callout.warn { background: var(--warn-bg); border-color: #fde68a; }
+  .callout .title { font-weight: 650; margin-bottom: 4px; font-size: 13px; }
+  .callout p, .callout li { margin: 0; color: var(--fg); font-size: 13.5px; }
+  .callout ul { margin: 6px 0 0; padding-left: 18px; }
+  .callout li { margin: 4px 0; }
+  hr { border: 0; border-top: 1px solid var(--stroke); margin: 24px 0; }
+  .chart-box {
+    background: var(--card); border: 1px solid var(--stroke); border-radius: 10px;
+    padding: 14px 16px 8px; margin: 10px 0;
+  }
+  .chart-cap { color: var(--subtle); font-size: 12px; margin-top: 4px; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--stroke); border-radius: 10px; overflow: hidden; font-size: 13px;
+  }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--stroke); }
+  th { background: #f0f0ed; font-weight: 600; color: var(--muted); font-size: 12px; }
+  tr:last-child td { border-bottom: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px;
+    background: #e8e8e4; color: var(--muted); margin-right: 6px;
+  }
+  .pill.active { background: #1a1a1a; color: #fff; }
+  .footer { color: var(--subtle); font-size: 12px; border-top: 1px solid var(--stroke); padding-top: 12px; margin-top: 8px; }
+  .small { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>因素分解进展 · tok / prev / trigram / POS</h1>
+  <p class="sub">相对上周：上周只看了 token-id η² 随层深下降，并给出后置归一化稀释解释；本周把上周 todo 里的「前一个 token / bigram」嵌套分解做完，并扩到 trigram 与 spaCy POS。读缓存激活（12 个 ckpt × 6 层，2.9 TB），原始 silu(gate)·up，cross-fit η² 中位数。</p>
+
+  <div class="stats">
+    <div class="stat info"><div class="v">0.146</div><div class="l">step10k L4 · Δ(prev|tok)</div></div>
+    <div class="stat"><div class="v">0.047</div><div class="l">step10k L8 · Δ(prev2|bigram)</div></div>
+    <div class="stat warn"><div class="v">0.013</div><div class="l">step10k L4 · Δ(POS|tok)</div></div>
+    <div class="stat ok"><div class="v">98–100%</div><div class="l">神经元先选 tok（贪心第一步）</div></div>
+  </div>
+
+  <div class="section">
+    <h2>回顾：上周汇报（token-id 随层下降）</h2>
+    <div class="callout">
+      <div class="title">现象</div>
+      <p>L0 FFN 几乎直接读词嵌入相关的 token 信号，上下文还没进来。训练开始后，层越深，FFN 激活方差里由「当前 token 是什么」决定的比例越小、由上下文决定的比例越大——这不等于「深层不需要 token 信息」。最后一层不再下降，L31 与 L24 基本持平。step 1k 全层跳升，之后深层回落、5k+ 平台。</p>
+    </div>
+    <div class="callout info">
+      <div class="title">解释</div>
+      <p>Olmo-3 后置归一化：hₗ = eₜ + Σₖ₍ₖ₌₀..ₗ₋₁₎ (aₖ + mₖ) + aₗ；attention / FFN 输入不做 norm，只把输出 RMSNorm 后加回残差。FFN 读到的是全部写入块的累加，token-id η² ≈ 各写入块 η² 的方差加权平均；注意力是唯一跨位置搬运信息的操作，第 0 层之后注意力写入以上下文为主，浅层的 token 信号在加权平均里被稀释。1k 跳变来自 L0 注意力变成 token 特异；基座浅层增益很小、嵌入占比大，但 L0 神经元 η² 仍只有 ~0.48。</p>
+    </div>
+    <div class="callout warn">
+      <div class="title">上周 todo → 本周已完成</div>
+      <p>补「前一个 token」因素，做嵌套分解：先 token，再 (token, 前一个 token)，看深层「上下文」方差里有多少只是 bigram。本周已实现，并扩到 trigram；另加字符类与 spaCy POS。</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="section">
+    <h2>本周一：嵌套 n-gram 分解 <span class="pill active">step 10k</span></h2>
+    <div class="callout">
+      <div class="title">现象</div>
+      <p>把「上下文」拆成局部 n-gram：η²(tok) + Δ(prev|tok) + Δ(prev2|bigram) + 剩余 = 1。训练后 L0 几乎全是 tok（Δ(prev|tok) ≈0）；从 L4 起 prev 增量明显，L4–L8 最高（step10k ~0.14–0.15），再往深缓慢下降。trigram 相对 bigram 的增量更小且随层/步数几乎不涨（峰值 ~0.05）。深层剩余仍很大（step10k L31 剩余 0.77）。贪心每轮按 (ckpt, layer, neuron) 重算：第一步几乎总是选 tok（98–100%）。</p>
+    </div>
+    <div class="chart-box">
+      <canvas id="chainChart" height="120"></canvas>
+      <div class="chart-cap">当前 checkpoint：step 10k。纵轴：per-neuron cross-fit η² 中位数。链式四块之和为 1。</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>层</th><th>η²(tok)</th><th>Δ(prev|tok)</th><th>Δ(prev2|bigram)</th><th>剩余</th><th>对比 Δ(POS|tok)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>L0</td><td>93.1%</td><td>0.1%</td><td>0.0%</td><td>6.8%</td><td>−0.2%</td></tr>
+        <tr><td>L4</td><td>51.8%</td><td>14.6%</td><td>2.8%</td><td>29.2%</td><td>1.3%</td></tr>
+        <tr><td>L8</td><td>27.7%</td><td>14.3%</td><td>4.7%</td><td>51.9%</td><td>1.2%</td></tr>
+        <tr><td>L16</td><td>19.1%</td><td>10.3%</td><td>3.6%</td><td>66.0%</td><td>0.9%</td></tr>
+        <tr><td>L24</td><td>13.2%</td><td>8.1%</td><td>2.9%</td><td>75.5%</td><td>0.8%</td></tr>
+        <tr><td>L31</td><td>12.0%</td><td>7.6%</td><td>2.8%</td><td>76.8%</td><td>0.8%</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info" style="margin-top:12px">
+      <div class="title">解释</div>
+      <p>分组：tok ⊂ bigram ⊂ trigram 严格嵌套；prev 是 bigram 按「前一个 token」粗化。bigram = 两折都出现过的最高频 2 万个 (prev, tok)，其余退回 tok 组；trigram 同理叠在高频 bigram 上。Δ(prev|tok) = η²(bigram)−η²(tok) 量的是「给定当前 token 后，前一个 token 还多解释多少」——深层「上下文」里有一块是局部二元组，但不是全部。trigram 增量不随层深变大，是因为：条件信息量相对 bigram 本来就小；覆盖率只有约一半；更长程上下文进剩余项。神经元读到的上下文远比「前两个 token」细。</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="section">
+    <h2>本周二：字符类 + 上下文 POS</h2>
+    <div class="callout">
+      <div class="title">现象</div>
+      <p>字符类（~18 类，只看 token 字符串）和 spaCy UPOS（对齐到模型 BPE）在 token-id 之上几乎不再多解释方差。Δ(POS|tok) 中位数只有 0.006–0.013，约为 Δ(prev|tok) 的十分之一；所有层、所有 ckpt 上 η²(POS) 从未超过 η²(tok)。pos_multi（冲突 token 单独 MULTI）前三位小数不变。H(POS|token-id)=0.46 bit，相对 H(POS)=3.8 bit，约 88% 的 POS 信息已被 token-id 决定。</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <h3>step 10k：POS vs prev 增量</h3>
+        <div class="chart-box">
+          <canvas id="posChart" height="160"></canvas>
+          <div class="chart-cap">纵轴：η² / 增量中位数。POS 与字符类量级接近，远小于 prev。</div>
+        </div>
+      </div>
+      <div>
+        <h3>对齐与信息量</h3>
+        <table>
+          <thead><tr><th>对齐类别</th><th>token 占比</th></tr></thead>
+          <tbody>
+            <tr><td>one_to_one（词↔token）</td><td>78.0%</td></tr>
+            <tr><td>subword（子词继承）</td><td>10.2%</td></tr>
+            <tr><td>whitespace → SPACE/NEWLINE</td><td>10.6%</td></tr>
+            <tr><td>multi_same / multi_conflict</td><td>0.9% / 0.29%</td></tr>
+            <tr><td>重新分词 id 一致的序列</td><td>1924 / 1953</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin-top:10px">spaCy 跑在 decode 出的冻结文本上，再用 char offset 对齐到模型 token；冲突主要是 &lt;=、can+n't 等。</p>
+      </div>
+    </div>
+    <div class="callout info">
+      <div class="title">解释</div>
+      <p>字符类是 token-id 的粗化（tok 严格细分 charclass）；tok×POS 格子是 tok 的细分。POS 上下文相关，但同一 token 的 POS 变化有限，所以给定 token 后再看 POS 几乎不增解释力。神经元从上下文拿到的信息比「名词还是动词」细得多——形状上 Δ(POS|tok) 与 Δ(prev|tok) 一样在 L4–L8 略高，但幅度小一个数量级。训练动态也一致：粗粒度（POS / 字符类）在 1k 峰值更高，之后被更细的 token 与局部 n-gram 取代。</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="section">
+    <h2>方法要点（本周落地）</h2>
+    <p class="small">激活缓存 cache_acts.py：12 ckpt（step0..10k + 基座）× 层 {0,4,8,16,24,31}，bf16 存成 int16 npy，共 2.9 TB。分解脚本只读缓存：factor_decomp.py（tok/prev/bigram/trigram）、pos_tags.py + pos_decomp.py（字符类 / POS）。</p>
+    <p class="small">分组都要求两折都出现（cross-fit）；稀有格子退回父组，保证嵌套。bigram 覆盖 78.8%、trigram 覆盖 49.7%、tok×POS 覆盖 97.2%（有 ≥2 个 POS 格子的 token 覆盖 48.8%）。</p>
+  </div>
+
+  <div class="section">
+    <h2>Todo</h2>
+    <div class="callout warn">
+      <div class="title">下一步可做</div>
+      <ul>
+        <li>Δ(POS | bigram)：把 POS 叠在 bigram 上，确认 POS 是否带来 n-gram 之外的新信息（同一缓存约半小时）。</li>
+        <li>位置桶 / 领域 / 任务因素：research_plan 主序里还没测；领域需先在数据上标文档类型。</li>
+        <li>剩余项（L31 ~0.77）里有多少是更长程上下文 vs 噪声：可试 induction / 更远 token，或注意力熵相关分组。</li>
+        <li>把嵌套链与 POS 对比补进上周那份层剖面 canvas，方便汇报一张图讲完。</li>
+        <li>方差加权视角：少数高方差神经元上 POS/字符类占比更高（加权 L0 POS 到 0.46），值得单独看这些神经元。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    数据：runs_decomp_trigram/*.npz · runs_decomp_pos/*.npz · frozen_5e6/pos_code.npz · acts/ · T≈2×10⁶ · Nemotron SFT code · Olmo-3-1025-7B stage1 + 基座<br />
+    导出自 Cursor canvas「Olmo3 Factor Decomp Report」（静态等价页 · step 10k）
+  </div>
+</div>
+
+<script>
+const layers = ['L0','L4','L8','L16','L24','L31'];
+const tok = [0.931,0.518,0.277,0.191,0.132,0.120];
+const dPrev = [0.001,0.146,0.143,0.103,0.081,0.076];
+const dPrev2 = [0,0.028,0.047,0.036,0.029,0.028];
+const resid = [0.068,0.292,0.519,0.660,0.755,0.768];
+const dPos = [-0.0021,0.0126,0.0118,0.0094,0.0076,0.0078];
+const cc = [0.037,0.021,0.020,0.014,0.011,0.011];
+const pos = [0.042,0.026,0.024,0.020,0.018,0.018];
+
+const common = {
+  responsive: true,
+  animation: false,
+  plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+  scales: {
+    y: { beginAtZero: true, max: 1, ticks: { callback: v => (v*100).toFixed(0)+'%' } },
+    x: { grid: { display: false } }
+  }
+};
+
+new Chart(document.getElementById('chainChart'), {
+  type: 'line',
+  data: {
+    labels: layers,
+    datasets: [
+      { label: 'η²(tok)', data: tok, borderColor: '#1a1a1a', backgroundColor: '#1a1a1a', tension: 0.2, pointRadius: 3 },
+      { label: 'Δ(prev|tok)', data: dPrev, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, pointRadius: 3 },
+      { label: 'Δ(prev2|bigram)', data: dPrev2, borderColor: '#b45309', backgroundColor: '#b45309', tension: 0.2, pointRadius: 3 },
+      { label: '剩余 1−η²(trigram)', data: resid, borderColor: '#6b7280', backgroundColor: '#6b7280', tension: 0.2, pointRadius: 3, borderDash: [4,3] },
+    ]
+  },
+  options: common
+});
+
+new Chart(document.getElementById('posChart'), {
+  type: 'line',
+  data: {
+    labels: layers,
+    datasets: [
+      { label: 'Δ(prev|tok)', data: dPrev, borderColor: '#2563eb', backgroundColor: '#2563eb', tension: 0.2, pointRadius: 3 },
+      { label: 'Δ(POS|tok)', data: dPos, borderColor: '#b45309', backgroundColor: '#b45309', tension: 0.2, pointRadius: 3 },
+      { label: 'η²(字符类)', data: cc, borderColor: '#1a1a1a', backgroundColor: '#1a1a1a', tension: 0.2, pointRadius: 3 },
+      { label: 'η²(POS)', data: pos, borderColor: '#6b7280', backgroundColor: '#6b7280', tension: 0.2, pointRadius: 3, borderDash: [4,3] },
+    ]
+  },
+  options: {
+    ...common,
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => (v*100).toFixed(0)+'%' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>

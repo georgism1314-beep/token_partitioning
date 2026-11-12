@@ -14,7 +14,7 @@ z_h 是连续向量，不能分组算 η²，改用交叉拟合的岭回归（�
 全部由充分统计量算出（每折的 ΣxxT、ΣxyT、Σy²，以及按 token 组的 Σx、Σy），一次前向即可。
 线性回归只是下界：FFN 对输入是非线性的。max_h 在 32 个估计里取最大，会有少量正向选择偏差。
 
-    python attn_head_regress.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python extra/attn_head_regress.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 import time
@@ -24,7 +24,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

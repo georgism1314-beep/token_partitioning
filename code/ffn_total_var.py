@@ -6,7 +6,7 @@
     sqmean        [L, N]  E[x²]
 总方差 = Σ_n var[l, n]（对神经元求和），也给出每个神经元方差的中位数。
 
-    python ffn_total_var.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python code/ffn_total_var.py --steps 0 10000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 import time
@@ -16,7 +16,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

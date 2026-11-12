@@ -7,7 +7,7 @@
     done       全部写完才创建，下游以它判断缓存完整
 每层 T=2×10⁶ 时约 44 GB。
 
-    python cache_acts.py --steps 0 1000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
+    python cached/cache_acts.py --steps 0 1000 --extra_ckpts /home/test/testdata/models/Olmo-3-1025-7B
 """
 import argparse
 import time
@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))

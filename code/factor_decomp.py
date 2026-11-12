@@ -17,7 +17,7 @@ tok ⊂ bigram ⊂ trigram 逐级细分，prev 也是 bigram 的粗化，所以�
     独有   Δ(tok | prev) = η²(bigram) − η²(prev)
     共享   η²(tok) + η²(prev) − η²(bigram)（为负表示两者有协同）
 
-    python factor_decomp.py --names step0 step10000 --layers 0 31
+    python code/factor_decomp.py --names step0 step10000 --layers 0 31
 """
 import argparse
 import time
@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--acts_root", default=str(root / "acts"))
 parser.add_argument("--names", nargs="+", default=[f"step{s}" for s in range(0, 10001, 1000)] + ["Olmo-3-1025-7B"])

@@ -24,11 +24,11 @@ they consume.
 Typical run (needs the HF cache / network for allenai/Olmo-3-1025-7B):
 
     export HF_HOME=/home/test/test06/.cache/huggingface
-    python step2.py --revision stage1-step1000 --layers 0 --max_tokens 200000
+    python code/step2.py --revision stage1-step1000 --layers 0 --max_tokens 200000
 
 Offline math check of the accumulators (tiny random model, no downloads):
 
-    python step2.py --selftest
+    python code/step2.py --selftest
 """
 
 from __future__ import annotations
@@ -663,7 +663,7 @@ def main(argv=None):
 
     out_dir = Path(args.out_dir)
     if not out_dir.is_absolute():
-        out_dir = Path(__file__).resolve().parent / out_dir
+        out_dir = Path(__file__).resolve().parents[1] / out_dir  # repo root
     tag = Path(args.model_name).name
     out_dir = out_dir / (tag if os.path.isdir(args.model_name) else f"{tag}_{args.revision}")
     out_dir.mkdir(parents=True, exist_ok=True)

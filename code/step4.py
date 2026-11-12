@@ -28,8 +28,8 @@
   大体只反映 p_i p_j；换成 z 分数后留下的是真正的超额共激活。此模式下零模型的
   z 分数恒为 0，故地板自动改用抽样零模型。
 
-    python step4.py runs_trial/Olmo-3-1025-7B/stats_code_L0.npz
-    python step4.py runs_trial/.../stats_*_L0.npz --edge_score zscore --floor sampled --seeds 10
+    python code/step4.py runs_trial/Olmo-3-1025-7B/stats_code_L0.npz
+    python code/step4.py runs_trial/.../stats_*_L0.npz --edge_score zscore --floor sampled --seeds 10
 """
 
 from __future__ import annotations

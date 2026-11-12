@@ -15,7 +15,7 @@ token-id 用 tok 的高频词表（两折都出现过的最高频 n_groups 个 t
 逐头的分组统计量很大（每个 head 约 6 GB，float64），所以每次只处理 heads_per_pass 个 head、重读一遍激活；
 每个 (层, head 块) 单独落盘，进程被杀后重跑只补缺的部分。
 
-    python attn_head_decomp.py --names step10000 --layers 4 31
+    python extra/attn_head_decomp.py --names step10000 --layers 4 31
 """
 import argparse
 import time
@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--acts_root", default=str(root / "acts"))
 parser.add_argument("--heads_root", default=str(root / "attn_heads"))

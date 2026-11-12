@@ -15,7 +15,7 @@ A_i 为神经元 i 的原始激活 silu(gate_proj(x)) * up_proj(x)。分组：
     反序   Δ(tok | POS) = η²(tokpos) − η²(pos)（退回组混合了 POS，所以只是近似的细分）
     共享   η²(tok) + η²(pos) − η²(tokpos)
 
-    python pos_decomp.py --names step0 step10000 --layers 0 31
+    python code/pos_decomp.py --names step0 step10000 --layers 0 31
 """
 import argparse
 import time
@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--acts_root", default=str(root / "acts"))
 parser.add_argument("--names", nargs="+", default=[f"step{s}" for s in range(0, 10001, 1000)] + ["Olmo-3-1025-7B"])

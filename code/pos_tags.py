@@ -12,7 +12,7 @@
            字符区间为空            -> 继承前一个 token               （zero_width）
 输出与冻结子集前缀等长的数组：upos、upos_multi、align、charclass，以及对齐统计和冲突样例。
 
-    python pos_tags.py --n_process 32
+    python code/pos_tags.py --n_process 32
 """
 import argparse
 import string
@@ -23,7 +23,7 @@ import numpy as np
 import spacy
 from transformers import AutoTokenizer
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default="/home/test/testdata/models/Olmo-3-1025-7B")
 parser.add_argument("--frozen", default=str(root / "frozen_5e6" / "frozen_code.npz"))

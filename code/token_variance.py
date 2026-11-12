@@ -16,7 +16,7 @@ A_i 取神经元 i 的原始 FFN 激活 h = silu(gate_proj(x)) * up_proj(x)（�
     eps2  ε² 校正：between - (G-1)/(T-G) * within
     cf    cross-fit：按文档分 A/B 两折，between = Σ_g n_g/T · (μ^A_g - μ)(μ^B_g - μ)，两折噪声独立故无偏
 
-    python token_variance.py --steps 0 1000 2000 --layers 0 4 8 16 24 31
+    python code/token_variance.py --steps 0 1000 2000 --layers 0 4 8 16 24 31
 """
 import argparse
 import time
@@ -26,7 +26,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]  # repo root
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt_root", default=str(root / "ckpts_deep"))
 parser.add_argument("--steps", type=int, nargs="*", default=list(range(0, 10001, 1000)))
